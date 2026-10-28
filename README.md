@@ -1,45 +1,65 @@
 # ginko-skill
 
-个人 Claude Code skill 合集，用于沉淀日常工作流。
+A personal collection of agent skills for capturing everyday workflows. Skills follow the `SKILL.md` format, which works in Claude Code and other agents that support the Agent Skills standard (such as OpenAI Codex).
 
-## 目录结构
+## Skills
 
-```
-skills/
-└── <skill-name>/
-    ├── SKILL.md        # 必需：frontmatter（name、description）+ 指令正文
-    ├── scripts/        # 可选：可执行脚本
-    ├── references/     # 可选：按需加载的参考文档
-    └── assets/         # 可选：模板、图片等资源
-```
-
-## 使用方式
-
-将需要的 skill 复制（或软链接）到 Claude Code 的 skills 目录：
-
-```bash
-# 全局可用
-cp -r skills/<skill-name> ~/.claude/skills/
-
-# 仅当前项目可用
-cp -r skills/<skill-name> <project>/.claude/skills/
-```
-
-或一次性链接全部 skill：
-
-```bash
-for d in skills/*/; do ln -sfn "$PWD/$d" ~/.claude/skills/"$(basename "$d")"; done
-```
-
-## 新增 skill
-
-1. 复制 `skills/example-skill` 为新目录，目录名与 `name` 字段保持一致（小写、连字符）。
-2. 写好 `description`：说明 skill 做什么、**何时**触发——Claude 依赖它决定是否加载。
-3. 正文保持精简，详细资料放到 `references/`，按需引用。
-
-## Skill 列表
-
-| Skill | 说明 |
+| Skill | Description |
 | --- | --- |
-| [example-skill](skills/example-skill) | 示例模板，新建 skill 时复制它 |
-| [avoid-overdefensive-code](skills/avoid-overdefensive-code) | 抑制过度防御编程（多余 try/except、空值检查、静默兜底），适用于 Claude Code / Codex；含 Python、TypeScript、Go |
+| [avoid-overdefensive-code](skills/avoid-overdefensive-code) | Suppresses over-defensive programming: redundant try/except, needless null checks, silent fallbacks. Language references for Python, TypeScript, and Go. |
+
+## Repository Layout
+
+```
+skills/                  # installable skills, one directory each
+└── <skill-name>/
+    ├── SKILL.md         # required: frontmatter (name, description) + instructions
+    ├── references/      # optional: detail loaded on demand
+    ├── scripts/         # optional: executable helpers
+    └── assets/          # optional: templates, images, other files
+templates/
+└── skill-template/      # starting point for new skills (not installed)
+```
+
+## Installation
+
+### Claude Code
+
+Copy a single skill:
+
+```bash
+cp -r skills/<skill-name> ~/.claude/skills/
+```
+
+Or symlink every skill so updates from `git pull` apply automatically:
+
+```bash
+mkdir -p ~/.claude/skills && for d in skills/*/; do ln -sfn "$PWD/$d" ~/.claude/skills/"$(basename "$d")"; done
+```
+
+For a single project, use `<project>/.claude/skills/` instead of `~/.claude/skills/`.
+
+### OpenAI Codex
+
+Codex reads the same `SKILL.md` format. Copy or symlink skills into the skills directory listed in the [Codex skills docs](https://developers.openai.com/codex/skills). The location has changed between versions, so check the docs for your version.
+
+A skill only loads when the model decides it's relevant. For rules that should apply on every task, also copy the core principles into the project's `AGENTS.md`, which Codex reads on every run.
+
+### ChatGPT (web / desktop)
+
+ChatGPT doesn't load skill folders. Paste the body of `SKILL.md` into custom instructions or a project's instructions.
+
+## Writing a New Skill
+
+1. Copy the template: `cp -r templates/skill-template skills/<skill-name>`.
+2. Set `name` to match the directory name (lowercase, hyphenated).
+3. Write the `description` carefully. The model decides whether to load the skill from it alone, so state what the skill does, when to use it, and when not to.
+4. Fill in the body, then add a row to the table above.
+
+### Conventions
+
+- **English** for all skill content.
+- **Principles plus exceptions.** Every rule set needs a section on where the rules don't apply, or models over-correct.
+- **End with a self-check** the model runs against its own output.
+- **Keep `SKILL.md` short** (well under 500 lines). Move long examples and language- or domain-specific detail into `references/`, and say in `SKILL.md` when to read each file.
+- **Grow from real failures.** Add rules and examples from mistakes you actually observe, not hypothetical ones.
