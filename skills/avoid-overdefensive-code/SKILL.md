@@ -14,6 +14,7 @@ Goal: write code that **trusts internal contracts, validates at boundaries, and 
 3. **Catch only what you can handle.** Catch an exception only if you know its specific type and have a concrete recovery action (retry, alternate path, convert to a meaningful user-facing error). Otherwise let it propagate.
 4. **Don't write code for imagined requirements.** No unrequested config options, flags, fallback branches, or backward-compatibility logic.
 5. **Trust the type system and existing validation.** Values already guaranteed non-null / validated / normalized upstream are not re-checked downstream.
+6. **Follow the language's idiomatic error handling.** Explicit error propagation (Go's `if err != nil { return err }`, Rust's `?`) is correct handling, not over-defense. Don't remove it; remove the swallowing and silent fallbacks around it.
 
 ## Banned Patterns (unless an exception below applies)
 
@@ -49,4 +50,9 @@ For every `try/except`, `if x is None`, type check, default value, and fallback,
 
 When editing existing code: don't proactively remove existing defensive code (it may exist for historical reasons), but **don't add new code of the same kind**. If it's clearly harmful, point it out in your reply rather than changing it.
 
-See [references/examples.md](references/examples.md) for more before/after examples.
+## Language-Specific References
+
+Read the file matching the language you're writing; the table above uses Python/TypeScript syntax, and other languages have their own idioms.
+
+- Python / TypeScript: [references/examples.md](references/examples.md)
+- Go: [references/go.md](references/go.md)

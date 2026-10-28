@@ -42,4 +42,4 @@ for d in skills/*/; do ln -sfn "$PWD/$d" ~/.claude/skills/"$(basename "$d")"; do
 | Skill | 说明 |
 | --- | --- |
 | [example-skill](skills/example-skill) | 示例模板，新建 skill 时复制它 |
-| [avoid-overdefensive-code](skills/avoid-overdefensive-code) | 抑制过度防御编程（多余 try/except、空值检查、静默兜底），适用于 Claude Code / Codex |
+| [avoid-overdefensive-code](skills/avoid-overdefensive-code) | 抑制过度防御编程（多余 try/except、空值检查、静默兜底），适用于 Claude Code / Codex；含 Python、TypeScript、Go |
