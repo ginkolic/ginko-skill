@@ -17,6 +17,8 @@ Go's explicit error handling is **not** over-defensive. `if err != nil { return 
 | `if err != nil { log.Println(err); return nil }` | Caller sees success | `return fmt.Errorf("...: %w", err)` |
 | `if err != nil { continue }` in a loop | Silently drops items | Return the error, or collect with `errors.Join` if partial success is a requirement |
 | `_ = doSomething()` / ignoring a returned `error` | Hides failures | Handle or return it |
+| `n, _ := strconv.Atoi(s)` | Coercion: bad input silently becomes `0` | Check the error; return it or reject the input |
+| `if v, ok := m["user_id"]; ok { ... } else { v = -1 }` for required keys | Fabricates data | Return an error when a required key is missing |
 | Returning zero value + `nil` error on failure | Caller can't tell "empty" from "failed" | Return a non-nil error |
 | `if s == nil { return }` at the top of internal methods | Hides the bug that produced a nil receiver | Let it panic; fix the caller |
 | `if len(xs) == 0 { return }` before `for range xs` | Redundant; range over empty/nil is a no-op | Remove |

@@ -4,9 +4,12 @@ A personal collection of agent skills for capturing everyday workflows. Skills f
 
 ## Skills
 
+The two `avoid-*` skills are designed to be used together; each covers a different failure mode of AI-generated code.
+
 | Skill | Description |
 | --- | --- |
-| [avoid-overdefensive-code](skills/avoid-overdefensive-code) | Suppresses over-defensive programming: redundant try/except, needless null checks, silent fallbacks. Language references for Python, TypeScript, and Go. |
+| [avoid-overdefensive-code](skills/avoid-overdefensive-code) | Suppresses over-defensive programming: swallowed exceptions, needless null checks, fabricated defaults, silent fallbacks, compatibility shims. Includes a cleanup mode for reviewing diffs. Language references for Python, TypeScript, and Go. |
+| [avoid-overengineering](skills/avoid-overengineering) | Suppresses over-engineering: premature abstractions, single-use helpers, unrequested config and feature flags, needless retries/async/caching, and logging/comment bloat. Includes a cleanup mode for reviewing diffs. |
 
 ## Repository Layout
 

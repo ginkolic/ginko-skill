@@ -23,6 +23,10 @@ Python's EAFP style (`try: d[k] except KeyError:`) is idiomatic when the excepti
 | `hasattr(obj, "x")` / `getattr(obj, "x", None)` on known classes | Hides attribute typos and refactor breakage | `obj.x` |
 | `d.get("key", default)` for required keys | Misspelled keys silently return defaults | `d["key"]` |
 | `value or default` where `0` / `""` / `[]` are valid | Silently replaces valid falsy values | Handle `None` explicitly, only if `None` is possible |
+| `d.get("created_at", datetime.now())`, `d.get("status", "unknown")` | Fabricates data: old records get today's date, `"unknown"` pollutes analytics | `d["created_at"]`; use `.get()` only for fields that are nullable by design |
+| `int(d.get("age", 0))`, `float(str(x))` | Coercion turns a wrong type or missing value into plausible-looking data | Validate at the boundary (pydantic); access directly inside |
+| `try: new_api() except AttributeError: old_api()` | Version drift goes undetected; the shim never gets removed | Call `new_api()` and pin the dependency |
+| `# type: ignore`, `cast(Any, x)` to silence the checker | Removes the guarantees the rest of the code relies on | Fix the type, or parse the value |
 | `copy.deepcopy(arg)` "to be safe" | Needless cost | Copy only when mutation of shared state is real |
 | Returning `None` / `[]` / `{}` on failure | "Empty" and "failed" are indistinguishable | Raise |
 
@@ -105,6 +109,49 @@ A dropped database connection and "user not found" become the same result.
 def find_user(user_id: int) -> User | None:
     return db.query(User).filter_by(id=user_id).one_or_none()
 ```
+
+### Fabricated defaults and coercion
+
+❌
+```python
+def to_event(record: dict) -> Event:
+    return Event(
+        user_id=record.get("user_id", -1),
+        amount=float(record.get("amount") or 0),
+        created_at=record.get("created_at", datetime.now()),
+        status=record.get("status", "unknown"),
+    )
+```
+A record missing `user_id` joins to no user; a missing `created_at` silently becomes today.
+
+✅ (`note` is the only field that's optional by design)
+```python
+def to_event(record: dict) -> Event:
+    return Event(
+        user_id=record["user_id"],
+        amount=record["amount"],
+        created_at=record["created_at"],
+        status=record["status"],
+        note=record.get("note"),
+    )
+```
+If `record` comes from outside the program, parse it with a schema at the boundary instead.
+
+### Compatibility shim
+
+❌
+```python
+try:
+    df = df.map(normalize)
+except AttributeError:  # older pandas
+    df = df.applymap(normalize)
+```
+
+✅ (pin `pandas>=2.1` in the project's dependencies)
+```python
+df = df.map(normalize)
+```
+Exception: an explicitly optional dependency (e.g. `try: import orjson except ImportError: orjson = None`) is fine when the fallback is a documented feature, not a guess.
 
 ### Translating exceptions without losing the cause
 

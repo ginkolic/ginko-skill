@@ -23,6 +23,10 @@ With `strict` mode on, the compiler already guarantees most of what defensive ru
 | `Array.isArray(x)` on a value typed as an array | Duplicates the compiler | Remove |
 | `const data = (await res.json()) as User` | Unchecked cast at a boundary — the one place you *should* validate | `UserSchema.parse(await res.json())` |
 | Silent `default: return null` in a `switch` over a union | New union members get ignored | `default: { const _: never = x; throw new Error(...) }` |
+| `Number(x) \|\| 0`, `String(x ?? "")`, `parseInt(x) \|\| 0` | Coercion turns bad or missing data into plausible values | Parse at the boundary; access typed values directly inside |
+| `obj.createdAt ?? new Date()`, `status ?? "unknown"` on required fields | Fabricates data | Access directly; make the field optional only if absence is real |
+| `as any`, `@ts-ignore`, `@ts-expect-error` to silence an error | Removes the guarantees the rest of the code relies on | Fix the type, or parse the value with a schema |
+| `typeof api.newMethod === "function" ? api.newMethod() : api.oldMethod()` | Compatibility shim; version drift goes undetected | Call `newMethod()` and pin the dependency version |
 | `structuredClone` / spreading args "to be safe" | Needless cost | Copy only when shared mutation is real |
 
 ## Where defense belongs in TypeScript
@@ -92,6 +96,27 @@ function formatPrice(amount: number, currency: string): string {
 ```ts
 function formatPrice(amount: number, currency: string): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
+}
+```
+
+### Coercion and fabricated defaults
+
+❌
+```ts
+function toOrder(row: OrderRow): Order {
+  return {
+    id: String(row.id ?? ""),
+    quantity: Number(row.quantity) || 0,
+    createdAt: row.createdAt ? new Date(row.createdAt) : new Date(),
+  };
+}
+```
+A row with no `createdAt` silently becomes "created now"; a non-numeric quantity becomes `0`.
+
+✅ (`OrderRow` is already parsed at the boundary, so its fields are typed and required)
+```ts
+function toOrder(row: OrderRow): Order {
+  return { id: row.id, quantity: row.quantity, createdAt: new Date(row.createdAt) };
 }
 ```
 
