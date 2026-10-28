@@ -1,8 +1,8 @@
-# 正反例
+# Before / After Examples
 
-## 1. 吞掉异常
+## 1. Swallowed exceptions
 
-❌ 过度防御
+❌ Over-defensive
 ```python
 def load_config(path):
     try:
@@ -12,15 +12,15 @@ def load_config(path):
         logger.warning(f"failed to load config: {e}")
         return {}
 ```
-配置文件损坏时程序带着空配置继续跑，问题会在很远的地方以奇怪的形式出现。
+A corrupted config file lets the program keep running with an empty config, and the problem surfaces far away in a confusing form.
 
-✅ 改进
+✅ Better
 ```python
 def load_config(path: Path) -> dict:
     with path.open() as f:
         return json.load(f)
 ```
-如果"文件不存在时使用默认配置"是**明确需求**，只捕获那一种：
+If "use defaults when the file is missing" is an **explicit requirement**, catch only that case:
 ```python
 def load_config(path: Path) -> dict:
     try:
@@ -30,9 +30,9 @@ def load_config(path: Path) -> dict:
         return DEFAULT_CONFIG
 ```
 
-## 2. 内部函数重复校验
+## 2. Redundant validation in internal functions
 
-❌ 过度防御
+❌ Over-defensive
 ```python
 def calc_total(items: list[Item]) -> Decimal:
     if items is None:
@@ -47,32 +47,32 @@ def calc_total(items: list[Item]) -> Decimal:
     return total
 ```
 
-✅ 改进
+✅ Better
 ```python
 def calc_total(items: list[Item]) -> Decimal:
     return sum((item.price for item in items), Decimal(0))
 ```
 
-## 3. 可选链掩盖结构错误
+## 3. Optional chaining hiding structural errors
 
-❌ 过度防御
+❌ Over-defensive
 ```ts
 function getUserCity(user: User): string {
   return user?.profile?.address?.city ?? "";
 }
 ```
 
-✅ 改进（`User` 类型里 profile/address 是必填的）
+✅ Better (`profile` and `address` are required in the `User` type)
 ```ts
 function getUserCity(user: User): string {
   return user.profile.address.city;
 }
 ```
-如果数据来自外部 API，在边界用 schema（zod / pydantic）解析一次，之后内部全部信任类型。
+If the data comes from an external API, parse it once at the boundary with a schema (zod / pydantic), then trust the types internally.
 
-## 4. 静默兜底返回值
+## 4. Silent fallback return values
 
-❌ 过度防御
+❌ Over-defensive
 ```python
 def find_user(user_id: int) -> User | None:
     try:
@@ -80,19 +80,19 @@ def find_user(user_id: int) -> User | None:
     except Exception:
         return None
 ```
-数据库连接断了和"用户不存在"变成了同一个结果。
+A dropped database connection and "user not found" become the same result.
 
-✅ 改进
+✅ Better
 ```python
 def find_user(user_id: int) -> User | None:
     return db.query(User).filter_by(id=user_id).one_or_none()
 ```
 
-## 5. 边界处该防御的地方（正确示例）
+## 5. Defense where it belongs (correct example)
 
 ```python
 @app.post("/orders")
 def create_order(payload: dict):
-    order = OrderIn.model_validate(payload)   # 边界：校验外部输入
-    return order_service.create(order)        # 内部：信任已校验的 order
+    order = OrderIn.model_validate(payload)   # boundary: validate external input
+    return order_service.create(order)        # internal: trust the validated order
 ```
