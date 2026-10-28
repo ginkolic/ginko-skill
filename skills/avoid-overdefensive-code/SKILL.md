@@ -54,5 +54,6 @@ When editing existing code: don't proactively remove existing defensive code (it
 
 Read the file matching the language you're writing; the table above uses Python/TypeScript syntax, and other languages have their own idioms.
 
-- Python / TypeScript: [references/examples.md](references/examples.md)
+- Python: [references/python.md](references/python.md)
+- TypeScript / JavaScript: [references/typescript.md](references/typescript.md)
 - Go: [references/go.md](references/go.md)
